@@ -1,0 +1,19 @@
+[package]
+name = "using-param"
+version = "0.1.0"
+edition = "2024"
+
+authors = ["A4-Tacks <wdsjxhno1001@163.com>"]
+keywords = ["using", "parameter", "context", "macros", "proc_macro"]
+categories = ["rust-patterns"]
+description = "Add parameters, generics and return types to all functions in the impl block"
+
+license = "MIT"
+repository = "https://github.com/A4-Tacks/using-param-rs"
+readme = "README.md"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+proc-macro-tool = { version = "0.8.35" }
