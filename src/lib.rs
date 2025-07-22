@@ -16,16 +16,17 @@ pub fn using_generic(attr: TokenStream, item: TokenStream) -> TokenStream {
 
 #[proc_macro_attribute]
 pub fn using_return(attr: TokenStream, item: TokenStream) -> TokenStream {
-    process(Type::RetType, attr, item)
+    process(Type::Ret, attr, item)
 }
 
-enum Type { Param, Generic, RetType }
+#[derive(Debug, Clone, Copy)]
+enum Type { Param, Generic, Ret }
 
 fn process(ty: Type, attr: TokenStream, item: TokenStream) -> TokenStream {
     let cfg = match ty {
         Type::Param => param_cfg(attr),
         Type::Generic => generic_cfg(attr),
-        Type::RetType => Conf { return_type: attr, ..Default::default() },
+        Type::Ret => Conf { return_type: attr, ..Default::default() },
     };
 
     let mut iter = item.parse_iter();
@@ -41,7 +42,7 @@ fn process(ty: Type, attr: TokenStream, item: TokenStream) -> TokenStream {
     }).unwrap();
 
     let items = block.to_brace_stream().unwrap();
-    match process_impl_block(cfg, items) {
+    match process_impl_block(&cfg, items) {
         Err(e) => e,
         Ok(b) => {
             out.push(b.grouped_brace().tt());
@@ -81,22 +82,22 @@ fn fn_generic(iter: &mut ParseIter<impl Iterator<Item = TokenTree>>) -> TokenStr
 
 fn param_cfg(attr: TokenStream) -> Conf {
     let mut iter = attr.parse_iter();
-    let mut cfg = Conf::default();
 
-    cfg.params_after = iter.next_if(|t| t.is_punch(',')).is_some();
-    cfg.param = iter.collect();
-
-    cfg
+    Conf {
+        params_after: iter.next_if(|t| t.is_punch(',')).is_some(),
+        param: iter.collect(),
+        ..Default::default()
+    }
 }
 
 fn generic_cfg(attr: TokenStream) -> Conf {
     let mut iter = attr.parse_iter();
-    let mut cfg = Conf::default();
 
-    cfg.generics_after = iter.next_if(|t| t.is_punch(',')).is_some();
-    cfg.generics = iter.collect();
-
-    cfg
+    Conf {
+        generics_after: iter.next_if(|t| t.is_punch(',')).is_some(),
+        generics: iter.collect(),
+        ..Default::default()
+    }
 }
 
 fn join_with_comma(a: TokenStream, b: TokenStream) -> TokenStream {
@@ -159,7 +160,7 @@ fn self_param(iter: &mut ParseIter<impl Iterator<Item = TokenTree>>) -> TokenStr
 }
 
 fn process_impl_block(
-    cfg: Conf,
+    cfg: &Conf,
     items: TokenStream,
 ) -> Result<TokenStream, TokenStream> {
     let mut out = TokenStream::new();
