@@ -4,16 +4,71 @@ use proc_macro::*;
 use proc_macro::Spacing::*;
 use proc_macro_tool::*;
 
+/// Apply on impl block, add to parameter
+///
+/// # Examples
+///
+/// ```
+/// struct Foo;
+/// #[using_param::using_param(id: i32)]
+/// impl Foo {
+///     fn foo(&self, s: &str) {}
+///     // like this:
+///     // fn foo(&self, id: i32, s: &str) {}
+/// }
+/// #[using_param::using_param(, patch: i32)]
+/// impl Foo {
+///     fn bar(&self, s: &str) {}
+///     // like this:
+///     // fn bar(&self, s: &str, patch: i32) {}
+/// }
+/// ```
 #[proc_macro_attribute]
 pub fn using_param(attr: TokenStream, item: TokenStream) -> TokenStream {
     process(Type::Param, attr, item)
 }
 
+/// Apply on impl block, add to generics parameter
+///
+/// # Examples
+///
+/// ```
+/// struct Foo;
+/// #[using_param::using_generic(T)]
+/// impl Foo {
+///     fn foo<U>(&self, t: T, u: U) {}
+///     // like this:
+///     // fn foo<T, U>(&self, t: T, u: U) {}
+/// }
+/// #[using_param::using_generic(, T)]
+/// impl Foo {
+///     fn bar<U>(&self, u: U, t: T) {}
+///     // like this:
+///     // fn bar<U, T>(&self, u: U, t: T) {}
+/// }
+/// ```
 #[proc_macro_attribute]
 pub fn using_generic(attr: TokenStream, item: TokenStream) -> TokenStream {
     process(Type::Generic, attr, item)
 }
 
+/// Apply on impl block, replace the default return type
+///
+/// # Examples
+///
+/// ```
+/// struct Foo;
+/// #[using_param::using_return(i32)]
+/// impl Foo {
+///     fn foo() { 2 }
+///     // like this:
+///     // fn foo() -> i32 { 2 }
+///
+///     fn bar() -> () {}
+///     // like this:
+///     // fn bar() {}
+/// }
+/// ```
 #[proc_macro_attribute]
 pub fn using_return(attr: TokenStream, item: TokenStream) -> TokenStream {
     process(Type::Ret, attr, item)
